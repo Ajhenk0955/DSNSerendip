@@ -1,0 +1,440 @@
+				Read_seti4 User Guide
+
+
+				Ray Bambery
+
+				April 25, 2010
+
+
+Contents
+
+0	Introduction
+
+1	Set up prior to Running
+
+2	Running the Program
+
+3	Input Data Structures
+
+4 	Output Data
+
+5 	Other components
+
+6  	Common errors
+
+0 Introduction
+
+Read_seti4 is a program to read the data structures emitted by a socket connected to
+a remote computer which houses the the SETI Spectrometer and format them to an 
+output data set suitable for analysis.
+
+The computer on which read_seti4 is run named bee2spec.jpl.nasa.gov. The name
+of the computer housing the SETI spectrometer is beegentle.
+
+The program read_seti4.c and its components are located in the directory
+/usr/local/seti/src on bee2spec . It is derived from a set of modules created by 
+Dr. Tom Kuiper of JPL and the University of California, Berkeley engineers who built 
+the spectrometer.
+
+In particular, read_seti4 requires the following c modules:
+setispec.c, and
+casper.c
+
+along with the include files
+setispec.h,
+casper.h, and
+gracie.h
+
+Read_seti4 is built by invoking the command make -f Makefile read_seti4.
+Makefile is a standard makefile, located in the same directory, that also builds 
+other code that read_seti4 does not use directly.
+
+You will need passwords for the account ops on bee2spec
+and for the account obs on beegentle. 
+[NOTE: the userids are indeed different.]
+Get the passwords from the appropriate administrator.
+
+
+1.0 Setting up prior to running
+
+Before read_seti4 can be run, certain programs need to be running on
+the computer beegentle. These are:
+pfb_phaseshift.bof,
+ct_phaseshift.bof,
+fft_phaseshift.bof,
+thr_phaseshift.bof, and
+sendstatus.sh
+
+The 4 bof files are found on beegentle in the directory /home/obs/bofs.
+The sendstatus.sh is found on beegentle in the directory /home/obs/bin.
+
+The four bof files control the functions of the spectrometer while the
+sendstatus.sh allows data transmission between beegentle and
+bee2spec. The 4 bof files may be found to be running without the
+sendstatus.sh running.
+
+
+1.1 Finding out the status
+
+To find out the status of these programs, log onto beegentle
+and issue the command
+
+ps -ef | grep bof.  
+
+You should get something like
+
+obs		406	     1	0	Feb19 pts/0	00:00:00 /home/obs/bofs/pfb_phaseshift.bof
+obs		410	     1	0	Feb19 pts/0	00:00:00 /home/obs/bofs/ct_phaseshift.bof
+obs		412	     1	0	Feb19 pts/0	00:00:00 /home/obs/bofs/fft_phaseshift.bof
+obs		413	     1	0	Feb19 pts/0	00:00:00 /home/obs/bofs/thr_phaseshift.bof
+obs	       14035  14019	0	16:22  pts/2   00:00:00 grep bof
+
+In that case the bofs are running.
+
+To find out if sendstatus is running issue the command
+
+ps -ef | grep send
+
+You should get something like
+
+obs 	     14050  14020   0          16:30   pts/1  00:00:00  /bin/sh /home/obs/bin/sendstatus.sh
+obs	     14500  14045   0		16:33   pts/2  00:00:00  grep send     
+
+In that case sendstatus.sh is running.
+
+If none of the programs are running they can all be started by the command
+
+sendstatus.sh.
+
+or sendstatus.sh &
+
+(The shell script must be run from the /home/obs/bin directory.)
+
+Once it has started it will print 
+Updating...
+Updating...
+every 10 seconds.
+
+1.2  Logging off beegentle while running read_seti4
+
+If you have issued the sendstatus.sh then you will have to abort
+the Updating... messages with a Ctrl/C and thus kill sendstatus.sh.
+If that happens all I/O to the read_seti4  program on bee2spec
+will stop.
+
+If you have issued the sendstatus.sh & the you will be able to
+log off of the beegentle computer without killing sendstatus.sh
+and data will continue to flow to read_seti4 running on bee2spec.
+All you have to do is interrupt the Updating... messages with
+a carriage return and log off.
+
+
+2.0  Running the program read_seti4
+
+2.1 The simplest case.
+
+After the proper setup read_seti4 is run from the
+/usr/local/seti/src directory. Unfortunately, due to the configuration
+on the account ops you'll have to invoke it by preceding it with ./, or
+
+./read_seti4
+
+What you will see is the following:
+
+Maximum allowed hits = 26
+Maximum number of spectra = 540  (~90/min)
+Maximum number of output files of each kind = 1
+###############################################################
+# If the BEE config buffer: numbytes = 152 message doesnt  show up for > 15 sec #
+#       then sendstatus and the 4 bofs are nt running on beegentle                             #
+###############################################################
+ ***** BEE config buffer: numbytes = 152 *****
+STARTING TIME: Mon Apr 12 17:08:33 PDT  2010
+DO FOREVER
+Synced up and ready to start
+[The terminal emits nothing again until done]
+
+end while
+Number if jumps detected = 1 (1 is OK)
+ENDING TIME:  Mon Apr 12 17:14:36 PDT  2010
+540 Spectra: time_diff =  362 sec + 388441 usec: (average = 0.671090 seconds)
+Maxpower = 852 (29.300db) in spectrum = 170, pfb_bin = 2702, fft_bin = 16, at hit_ctr = 17475553
+
+
+By default the program captures 540 spectra. On average this takes about 6 minutes.
+It then summarizes the time to capture, the maximum power detected in the 540
+spectra (in absolute units and db), which spectrum, which coarse bin and which fft bin
+it was found.  The program maintains a running count of all hits that lie above a threshold value.
+The threshold value is defined bee2.config file located in directory /home/obs/bin on beegentle.
+Currently, that value, scale_threshold, is set to 20.
+
+Note: the current rate that the socket passes data to bee2spec is a 1 spectrum every 0.67
+sec. The average number is 0.671090 sec which shows that we are keeping up with
+that rate.  Note also that the number of jumps is related to the loss of sync. Thus, with 1
+jump we are OK since the first jump comes with the initial sync to the start of a complete
+spectrum. Sync in this program occurs on at the start of a complete spectrum.
+
+The power is given in spectrum units. But this program saves the power in decibels. However,
+to avoid saving floating point numbers we convert the value to 100*decibels to give
+3 decimal places to our db values.
+
+
+2.2 Calling read_seti4 with parameters
+
+Read_seti4 allows for 3 parameters, -s, -m, and -n.
+The -s parameter allows you to change the number of spectra to be read to the output file. (default
+is 540). The -m parameter allows to change the maximum number of hits per pfb_bin allow to
+be stored. The current maximum value is stored in the bee2.config file located in directory 
+/home/obs/bin on beegentle. Currently, that value, max_hits_per_bin, is set to 26. The -n
+parameter allows you to change the number of output files that contain the reults for the
+-s spectra to be read.
+
+2.2.1  Thus, you could invoke:
+
+read_seti4 -s 5400
+
+Analyzes 5400 spectra in one output file, which takes about 1 hour.
+
+2.2.2  You could invoke
+
+read_seti4 -m 30 
+
+Which analyzes 540 spectra and allows up to 30 max hits per pfb_bin.
+
+2.2.3 You could invoke
+
+read_seti4 -n  4
+
+which would analyze 540 spectra per file with up to 26 hits per pfb_bin and store up to
+4 separate files for the analysis.
+
+2.2.4 Finally, you could invoke
+
+read_seti4 -s 5400 -m 30 -n 4
+Which would analyze 5400 spectra in each of 4 files with a maximum of 30 hits per pfb_bin.
+
+3.0 Input data structures
+
+The input data comes across a socket connection between bee2spec and beegentle.
+Bee2spec does the request and beegentle responds. There are two types of requests
+across the socket. The first is a request for bee2 configuration and status. After getting
+this information (152 bytes of ascii data) it sets up to continuously grab the spectrometer 
+data packets, until the required number of spectra have been received. It must ensure 
+that it starts on a spectrum boundary since beegentle is always emitting data packets. 
+
+The program then goes into a "FOREVER LOOP" and begins grabbing packets. When it 
+detects a spectrum start it is said to be synchronized and then the fetching, reformatting,
+and recording starts. It continues until the requisite number of spectra are captured.
+
+The format of the data packets is defined in setispec.h.
+It is 2 unsigned 32 bit integers named
+raw_data
+overflow_cntr.
+
+Raw data is of the following format as defined in casper.c. It consists of bit patterns
+defined by   EBBBOpp pppppppp pfffffff ffffffff
+where,
+E = 1 event bit,
+B = 3 unused bits,
+O = 1 overflow bit,
+p = 12 bits pfb bin value, and
+f  = 15 bits fft bin value.
+
+The internal routine slice, defined in casper.c, divides up the data into the proper 
+values.
+
+Sync is achieved when fft_bin and pfb_bin are both 0. The power value is obtained
+from pfb_bin and converted to 1000*log(pfb_bin_power) to convert to 100 times
+the base 10 log of the pfb_bin_power. Thus the units are of decibels with 3 decimal
+points shifted to get an integer value.
+
+Once it passes out of the loop it prints some status information and closes files.
+
+If the input parameter -s is greater than zero, it recycles through to a point in
+the program to reset up the sync, start fetching more packets and repeats
+the process over and over until all requested files are complete.
+
+There is a lag from closing the first set of files to opening the next, so spectra
+are always missed when closing and opening files. 
+
+4.0 Output data files
+
+The output data sets have the format:
+spcNNNNN.crs
+spcNNNNN.hdr
+spcNNNNN.hit
+
+N is a number from 00000 to 99999. NNNNN is set by the input parameter, -n.
+
+IMPORTANT: whenever, you restart the read_seti4 program you will always
+overwrite existing files of the same name. Therefore, you must move the earlier
+files to a new directory or rename them in order to preserve them.
+
+In the simplest case, -n = 0 (default), one run of read_seti4 produces 3 data sets;
+spc00000.crs
+spc00000.hdr
+spc00000.hit
+
+These files are stored in /usr/local/datafiles on bee2spec.
+
+The spc00000.crs stores the coarse spectra
+The spc00000.hdr stores the header file.
+The spc00000.hit stores the hits above threshold that are above the scale_threshold up
+to a maximum of that given in max_hits_per_bin.
+
+The size of the files for the default (540 spectra) case is:
+spc00000.crs  - 8,856,000 bytes
+spc00000.hdr - 686 bytes
+spc00000.hit - 442,367,800 bytes
+
+Each data set is described in the following sections.
+
+
+4.1  Spc00000.hdr is an ascii file with content as follows:
+
+It is written out as the program progresses.
+A typical run with the default settings will produce a file as follows:
+
+===============================================================================
+STARTING TIMECODE_S  : 1270771183
+STARTING TIMECODE_US : 636325
+STARTING TIME        : Thu Apr 08 16:59:43 PDT 2010
+BEE2 STATUS: Thu Apr  8 16:59:43 PDT 2010
+PFB SHIFT: 268435455
+FFT SHIFT: 28398
+THRESH LIMIT: 26
+THRESH SCALE: 20
+TENGE PORT: 33001
+TENGE IP: 167772161
+ 
+SYNC TIMECODE_S    : 1270771183
+SYNC TIMECODE_US   : 905128
+ENDING TIMECODE_S  : 1270771190
+ENDING TIMECODE_US : 621778
+ENDING TIME        : Thu Apr 08 16:59:50 PDT 2010
+10 spectra TIME DIFFERENCE = 6.716650 seconds (average = 0.671665 seconds)
+Nominal spectra rate = 0.67 sec
+MAXPOWER = 852 (29.300 db) in spectrum = 3 pfb_bin = 620 fft_bin = 1 at hit_ctr = 15525
+Number of jumps = 1 number of good = 0
+===============================================================================
+
+The time entries in STARTING.... are obtained from bee2spec and stored as the program starts up.
+The program requests the bee2 status buffer through the socket to beegentle and returns the information in lines 4 through 10. The size of the status buffer is 152 bytes. This value is shown as output on the terminal when it is received by bee2spec.
+
+The BEE2 status time is given by beegentle and the remainder of the lines are also  
+from beegentle.  The 2 important values for analysis is THRESH LIMIT:26 and THRESH SCALE:20.
+THRESH LIMIT can be overridden by the read_seti4 -n parameter but THRESH SCALE can
+only be changed in the bee2.config file located in directory /home/obs/bin on beegentle.
+
+Beegentle is constantly pouring out data from the spectrometer. The program read_seti4 must
+synchronize to the beginning of a spectrum. When it does it prints out  Lines 11 and 12.
+The 2 lines SYNC.... gives the time units in the unix data structure tm which is 2 32-bit
+integers tm.sec and tm.usec. That structure is defined in the standard include file, time.h. 
+This structure is obtained by bee2spec at the time of the 1st sync.
+
+Lines 13 and 14, starting with ENDING... are the time values obtained by bee2spec when
+all of the spectra have been obtained and written to the .crs and .hit data sets, i.e., on
+exit from the "DO FOREVER" loop. 
+
+The last 4 lines are the same as those printed out on the screen, just before exiting.
+
+Note: If you exit read_seti4 with a CTRL/C, then the .hdr file will only be written up to
+TENGE IP: 167772161.  There is no CTRL/C trapping mechanism built in to read_seti4
+so it stops writing to the .crs and .hit files immediately. Thus, both .crs and .hit files will have
+the last spectrum as a partial spectrum.  It is possible to retrieve the SYNC and ENDING 
+time codes by dumping the .crs file.
+
+
+4.2 Spc00000.crs is a binary file of the following format:
+
+1 record of time code of two 32-bit integers  followed by 4096 bins of 32-bit integer format,
+repeated in the default case 540 times.
+
+There is no count for each bin in the file so if the file is terminated with a CTRL/C the last 
+spectrum will be less than 4096 bins.
+
+It will repeat this cycle throughout the number of spectra being recorded. In the default
+case this will be 540 times. If the -s parameter is set then the repetition cycle will be
+whatever is given by -s. 
+
+
+4.3 Spc00000.hit is a binary file of the following format:
+
+16-bit spectrum counter,
+16-bit pfb_bin number,
+16-bit fft_bin number,
+16 bit hit_power in 100*db,
+for 4096 bins * number of spectra.
+
+It is written out by a c structure called hit which is defined in read_seti4.c
+
+5.0 	Other components
+
+setispec.c  - defines modules used to issue commands to control processes and functions
+		of the spectrometer
+
+casper.c - defines max_value routine and slice routine.
+
+read_seti3 - like read-seti4 but with buffering. It also has  a debug mode.
+
+
+6.0 	Common Errors
+
+The 2 most common errors are: 
+6.1  The four bofs are running but not sendstatus.sh
+
+In that case the program will start up and sit and wait forever.
+Therefore, you will note that the program prints the following message.
+
+Maximum allowed hits = 26
+Maximum number of spectra = 540  (~90/min)
+Maximum number of output files of each kind = 1
+###############################################################
+# If the BEE config buffer: numbytes = 152 nessage doesnt  show up for > 15 sec #
+#       then sendstatus and the 4 bofs are nt running on beegentle                             #
+###############################################################
+
+and waits..., and waits..., and waits....
+
+So the warning message notifies you that if no further messages appear in 15 min you 
+should start sendstatus.sh on beegentle.
+
+6.2  No bofs or sendstatus are running:
+
+In that case you will see the following:
+
+BEE config buffer:   numbytes = 500
+BEE2 STATUS: Thu Oct   1 01:29:26 PDT 2009
+PFB SHIFT: Error: couldn't open file '/proc/221777/hw/ioreg/fft_shift'
+FFT SHIFT: Error: couldn't open file '/proc/22185/hw/ioreg/fft_shift'
+THRESH LIMIT: Error: couldn't open file '/proc/22183/hw/ioreg/thr_cmp1_thr_lim'
+THRESH SCALE: Error: couldn't open file '/proc/22183/hw/ioreg/thr_scale_p1_scale'
+TENGE PORT: Error: couldn't open file '/proc/22183/hw/ioreg/rec_reg_10GbE_destport0'
+TENGE OP: Error: couldn't open file '/proc/22183/hw/iorefg/rec_reg_ip'
+
+The program runs but will give bad data. e.g.,
+
+"Lost data collecting spectrum 0 at channel 480 and PFB bin 1819"
+"Lost data collecting spectrum 0 at channel 481 and PFB bin 1820"
+
+These messages are truncated internally to stop repeating after 100 such messages.
+
+
+6.3 Other errors can occur due to data file failures, e.g.,
+
+??E - fopen on spc00000.hdr 
+
+This has two meanings, 1 file system full, which is unlikely
+or the most likely occurs if more than one user is creating files.
+
+In that case there exists a spc00000.hdr file created by another
+user, for which you can't overwrite. You'll have to have the other
+user remove or rename the file (or, the system admin do it for you).
+
+6.4 You can have a socket failure:
+
+??E - socket open failure
+
+In that case then beegentle is not powered up.
+
+
