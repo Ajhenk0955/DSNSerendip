@@ -7,7 +7,7 @@ https://casper.berkeley.edu/
 
 https://casper.berkeley.edu/wiki/Toolflow_Introduction
 
-SETI Spectrometer
+SETI Spectrometer (has anyone been able to open the .ace file?)***
 
 https://casper.berkeley.edu/jplsetispec/
 
@@ -48,6 +48,3 @@ https://casper.berkeley.edu/wiki/DSP_Block_Standardisation
 Testing
 
 https://casper.berkeley.edu/wiki/DSP_Blockset_Testing
-
-
-

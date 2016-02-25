@@ -1,24 +1,23 @@
 # ProjectFolder
 
+~~It seems there are two approaches we can choose from:
+We can adopt the GPU usage or we can use the model files that we have and
+implement on FPGA.
 
-   bin/        : Directory in which the output binaries will be created
+If it's FPGA we will still need the borph file and python files, but the cuda files
+will not be needed.
 
-   fileread.cu : Data-file-reading routines
+If it's GPUs then the files need to be cleaned up, and then we just add the new
+functions in.
 
-   fileread.h  : Header for data-file-reading routines
+The gist is this: python script turns files into borph then the borph file
+is loaded and configured to the roach board.
 
-   kernels.cu  : CUDA kernels
 
-   kernels.h   : Header for CUDA kernels
+borph.bof	: borph file :D
 
-   main.cu     : Top-level file
+model.mdl	: Model
 
-   main.h      : Top-level header file
+config.py 	: Configuration script
 
-   plot.cu     : Plotting routines
-
-   plot.h      : Header for plotting routines
-
-   Makefile    : The makefile
-
-   gencoeff.py : Python script to generate filter coefficients
+udp_grab.py	: Data Aquisition script
