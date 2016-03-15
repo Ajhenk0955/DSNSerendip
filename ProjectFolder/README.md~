@@ -1,10 +1,28 @@
 # ProjectFolder
 
+~~It seems there are two approaches we can choose from:
+We can adopt the GPU usage or we can use the model files that we have and
+implement on FPGA.
 
-tut5.bof	:
+If it's FPGA we will still need the borph file and python files, but the cuda files
+will not be needed.
 
-tut5.mdl	:
+If it's GPUs then the files need to be cleaned up, and then we just add the new
+functions in.
 
-tut5.py 	:
+Double checked what we have in our specs. Currently we use mainly the FPGA:
 
-udp_grab.py	: Grabs files for reading
+FPGA has : ADC -> DDC -> PFB -> Corner Turner -> FFT -> Thresholder ->
+GPU : Data Analysis -> header and binary file generation
+
+The gist is this: python script turns files into borph then the borph file
+is loaded and configured to the roach board.
+
+
+borph.bof	: borph file :D
+
+model.mdl	: Model
+
+config.py 	: Configuration script
+
+udp_grab.py	: Data Aquisition script

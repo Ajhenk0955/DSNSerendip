@@ -1,5 +1,8 @@
 # ProjectFolder
 
+setiSpec contains old files
+
+
 ~~It seems there are two approaches we can choose from:
 We can adopt the GPU usage or we can use the model files that we have and
 implement on FPGA.
@@ -9,6 +12,11 @@ will not be needed.
 
 If it's GPUs then the files need to be cleaned up, and then we just add the new
 functions in.
+
+Double checked what we have in our specs. Currently we use mainly the FPGA:
+
+FPGA has : ADC -> DDC -> PFB -> Corner Turner -> FFT -> Thresholder ->
+GPU : Data Analysis -> header and binary file generation
 
 The gist is this: python script turns files into borph then the borph file
 is loaded and configured to the roach board.
